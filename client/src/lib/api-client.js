@@ -1,7 +1,8 @@
+// src/lib/api-client.js
 import axios from "axios";
-import { HOST } from "../utils/constants.js";
+import { HOST } from "@/utils/constants";
 
 export const apiClient = axios.create({
-  baseURL: HOST,
+  baseURL: HOST || "http://localhost:8747",  // fallback to your backend port
+  withCredentials: true,
 });
-
