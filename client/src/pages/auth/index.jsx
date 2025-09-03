@@ -5,40 +5,80 @@ import { Input } from "@/components/ui/input";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
-import { apiClient} from "@/lib/api-client";
-import { SIGNUP_ROUTE} from "@/utils/constants.js";
+import { apiClient } from "@/lib/api-client";
+import { SIGNUP_ROUTE,LOGIN_ROUTE } from "@/utils/constants.js";
+import { useNavigate } from "react-router-dom";
+import { useAppStore } from "@/store";
+
+
 const Auth = () => {
+  const navigate = useNavigate();
+  const {setUserInfo} = useAppStore();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [ConfirmPassword, setConfirmPassword] = useState("");
 
-  const validateSignup = () => {
-    if(!email.length){
+  const validatelogin = () => {
+    if (!email.length) {
       toast.error("Email is required");
       return false;
     }
-    if(!password.length){
+    if (!password.length) {
       toast.error("Password is required");
       return false;
     }
-    if(password !== ConfirmPassword){
+    return true;
+  };
+
+  const validateSignup = () => {
+    if (!email.length) {
+      toast.error("Email is required");
+      return false;
+    }
+    if (!password.length) {
+      toast.error("Password is required");
+      return false;
+    }
+    if (password !== ConfirmPassword) {
       toast.error("Passwords do not match");
       return false;
     }
     return true;
-  }
+  };
 
   const handleLogin = async () => {
-    // login logic
+    if (validatelogin()) {
+      // login logic
+      const response = await apiClient.post(
+        LOGIN_ROUTE,
+        {
+          email,
+          password,
+        },
+        { withCredentials: true }
+      );
+      if (response.data.user.id) {
+        setUserInfo(response.data.user);
+        if (response.data.user.profileSetup) navigate("/chat");
+        else navigate("/profile");
+      }
+      console.log(response);
+    }
   };
 
   const handleSignup = async () => {
-    if(validateSignup()) {
+    if (validateSignup()) {
       // signup logic
-      const response = await apiClient.post(SIGNUP_ROUTE, {
-        email,
-        password
-      });
+      const response = await apiClient.post(
+        SIGNUP_ROUTE,
+        {
+          email,
+          password,
+        },
+        { withCredentials: true }
+      );
+      if (response.status === 201) setUserInfo(response.data.user);
+      navigate("/profile");
       console.log(response);
     }
   };
@@ -53,14 +93,18 @@ const Auth = () => {
               <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold">
                 Welcome to the Chat
               </h1>
-              <img src={Victory} alt="Victory" className="h-12 sm:h-16 lg:h-20" />
+              <img
+                src={Victory}
+                alt="Victory"
+                className="h-12 sm:h-16 lg:h-20"
+              />
             </div>
             <p className="text-gray-600 text-sm sm:text-base">
               Fill in the details to get started with the chat app!
             </p>
           </div>
 
-          <Tabs className="w-full max-w-md">
+          <Tabs className="w-full max-w-md " defaultValue="login">
             <TabsList className="bg-transparent flex border-b">
               <TabsTrigger
                 value="login"
